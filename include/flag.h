@@ -254,6 +254,7 @@ struct instance_flags {
 #endif
 	boolean  quiver_fired;
        boolean  pickup_thrown;
+	boolean  pickup_dropped;	/* don't auto-pickup items you dropped */
     boolean msgtype_regex;
     boolean ape_regex;
     boolean show_shop_prices;
