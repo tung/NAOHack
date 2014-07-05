@@ -149,6 +149,7 @@ static struct Bool_Opt
 #else
 	{"mail", (boolean *)0, TRUE, SET_IN_FILE},
 #endif
+	{"mapcolors", &iflags.mapcolors, FALSE, SET_IN_GAME},
 #ifdef MENU_COLOR
 # ifdef MICRO
 	{"menucolors", &iflags.use_menu_color, TRUE,  SET_IN_GAME},
@@ -3022,6 +3023,7 @@ goodfruit:
 			else if ((boolopt[i].addr) == &iflags.use_inverse ||
 					(boolopt[i].addr) == &iflags.showrace ||
 					(boolopt[i].addr) == &iflags.hilite_pet ||
+					(boolopt[i].addr) == &iflags.mapcolors ||
 					(boolopt[i].addr) == &iflags.wc2_guicolor) {
 			    need_redraw = TRUE;
 			}
