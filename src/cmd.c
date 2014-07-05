@@ -110,6 +110,7 @@ STATIC_PTR int NDECL(doprev_message);
 STATIC_PTR int NDECL(timed_occupation);
 STATIC_PTR int NDECL(doextcmd);
 STATIC_PTR int NDECL(domonability);
+STATIC_PTR int NDECL(dooverview_or_wiz_where);
 STATIC_PTR int NDECL(dotravel);
 # ifdef WIZARD
 STATIC_PTR int NDECL(wiz_mk_mapglyphdump);
@@ -532,6 +533,17 @@ enter_explore_mode()
 			pline("Resuming normal game.");
 		}
 	}
+	return 0;
+}
+
+STATIC_PTR int
+dooverview_or_wiz_where()
+{
+#ifdef WIZARD
+	if (wizard) return wiz_where();
+	else
+#endif
+	dooverview();
 	return 0;
 }
 
@@ -1985,6 +1997,7 @@ struct ext_func_tab extcmdlist[] = {
 	{"explore_mode", "enter explore (discovery) mode (only if defined)", enter_explore_mode, IFBURIED},
 
 	{"adjust", "adjust inventory letters", doorganize, IFBURIED, AUTOCOMPLETE},
+	{"annotate", "name current level", donamelevel, IFBURIED, AUTOCOMPLETE},
 	{"chat", "talk to someone", dotalk, IFBURIED, AUTOCOMPLETE},	/* converse? */
 	{"conduct", "list which challenges you have adhered to", doconduct, IFBURIED, AUTOCOMPLETE},
 	{"dip", "dip an object into something", dodip, !IFBURIED, AUTOCOMPLETE},
@@ -1997,6 +2010,7 @@ struct ext_func_tab extcmdlist[] = {
 	{"name", "name an item or type of object", do_naming_ddocall, IFBURIED, AUTOCOMPLETE},
 	{"nameold", "name an item or type of object (vanilla)", ddocall, IFBURIED},
 	{"offer", "offer a sacrifice to the gods", dosacrifice, !IFBURIED, AUTOCOMPLETE},
+	{"overview", "show an overview of the dungeon", dooverview, IFBURIED, AUTOCOMPLETE},
 	{"pray", "pray to the gods for help", dopray, IFBURIED, AUTOCOMPLETE},
 	{"quit", "exit without saving current game", done2, IFBURIED, AUTOCOMPLETE},
 #ifdef STEED
@@ -2077,7 +2091,7 @@ static struct ext_func_tab debug_extcmdlist[] = {
 	{"identify", "identify items in pack", wiz_identify, IFBURIED},
 	{"levelport", "to trans-level teleport", wiz_level_tele, IFBURIED},
 	{"wish", "make wish", wiz_wish, IFBURIED},
-	{"where", "tell locations of special levels", wiz_where, IFBURIED},
+	{"where", "tell locations of special levels", dooverview_or_wiz_where, IFBURIED},
 	{(char *)0, (char *)0, donull, IFBURIED}
 };
 
@@ -2117,6 +2131,8 @@ init_bind_list(void)
 		bind_key(C('o'), "where" );
 		bind_key(C('v'), "levelport" );
 		bind_key(C('w'), "wish" );
+	} else {
+		bind_key(C('o'), "overview");
 	}
 #endif
 	bind_key(C('l'), "redraw" ); /* if number_pad is set */
@@ -2158,10 +2174,14 @@ init_bind_list(void)
 	bind_key(M('m'), "monster" );
 	bind_key('N',    "name" );
 	/*       'n' prefixes a count if number_pad is on */
+	bind_key(C('n'), "annotate" );
 	bind_key(M('n'), "name" );
 	bind_key(M('N'), "name" ); /* if number_pad is on */
 	bind_key('o',    "open" );
 	bind_key('O',    "setoptions" );
+#ifndef WIZARD
+	bind_key(C('o'), "overview" );
+#endif
 	bind_key(M('o'), "offer" );
 	bind_key('p',    "pay" );
 	bind_key('P',    "puton" );
