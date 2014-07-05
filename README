@@ -1,3 +1,37 @@
+This branch of the NAO (nethack.alt.org) patch-set for NetHack 3.4.3 is
+customized such that it can be quickly compiled and configured for local play on
+my personal Linux installation.
+
+Enables:
+
+ - data librarian (DLB)
+ - user-configurable dump file location instead of fixed path
+ - elapsed real time tracking option
+
+Disables:
+
+ - wizmode map dumper
+ - HUP tracker
+ - dgamelaunch info file
+ - admin message
+ - whereis file
+ - fixed var playground location
+ - `-Wformat` and `-Wformat-security` compiler warnings
+
+Game is installed to user `tung` and group `tung` to
+`/home/tung/Install/naohack` (the configured `PREFIX` in
+`sys/unix/Makefile.top`), symlinks `nhdat` into the var playground (required for
+the game to run) and creates a launch script `naohack.sh` in `SHELLDIR`.
+
+To compile and install:
+
+ 1. `sh sys/unix/setup.sh x`
+ 2. `make all && make install`
+ 3. play with `/home/tung/Install/naohack/games/naohack.sh`
+
+
+                        - - - - - - - - - - -
+
                 NetHack 3.4.3 -- General information
 
 NetHack 3.4 is an enhancement to the dungeon exploration game NetHack.

@@ -14,11 +14,12 @@
 # MAKE = make
 
 # make NetHack
-PREFIX	 = /opt/nethack/nethack.alt.org
+#PREFIX	 = /opt/nethack/nethack.alt.org
+PREFIX	= /home/tung/Install/naohack
 GAME     = nethack.343-nao
 # GAME     = nethack.prg
-GAMEUID  = games
-GAMEGRP  = games
+GAMEUID  = tung
+GAMEGRP  = tung
 
 # Permissions - some places use setgid instead of setuid, for instance
 # See also the option "SECURE" in include/config.h
@@ -37,7 +38,7 @@ DIRPERM  = 0755
 # instructions)
 GAMEDIR  = $(PREFIX)/nh343
 VARDIR  = $(GAMEDIR)/var
-#SHELLDIR = $(PREFIX)/games
+SHELLDIR = $(PREFIX)/games
 
 # per discussion in Install.X11 and Install.Qt
 VARDATND = 
@@ -190,6 +191,9 @@ dofiles:
 #		-e 's;HACKDIR/nethack;HACKDIR/$(GAME);' \
 #		< sys/unix/nethack.sh \
 #		> $(SHELLDIR)/$(GAME)
+	-rm -f $(SHELLDIR)/naohack.sh
+	printf "#!/bin/sh\nHACKDIR=$(VARDIR) exec $(GAMEDIR)/$(GAME) \$$@\n" \
+		> $(SHELLDIR)/naohack.sh
 # set up their permissions
 	-( cd $(GAMEDIR) ; $(CHOWN) $(GAMEUID) $(GAME) recover ; \
 			$(CHGRP) $(GAMEGRP) $(GAME) recover )
@@ -198,9 +202,11 @@ dofiles:
 #	-$(CHOWN) $(GAMEUID) $(SHELLDIR)/$(GAME)
 #	$(CHGRP) $(GAMEGRP) $(SHELLDIR)/$(GAME)
 #	chmod $(EXEPERM) $(SHELLDIR)/$(GAME)
+	chmod $(EXEPERM) $(SHELLDIR)/naohack.sh
 
 dofiles-dlb: check-dlb
-	( cd dat ; cp nhdat $(DATNODLB) $(GAMEDIR) )
+	( cd dat ; cp nhdat $(DATNODLB) $(GAMEDIR) ; \
+			ln -fs ../nhdat $(VARDIR) )
 # set up their permissions
 	-( cd $(GAMEDIR) ; $(CHOWN) $(GAMEUID) nhdat $(DATNODLB) ; \
 			$(CHGRP) $(GAMEGRP) nhdat $(DATNODLB) ; \
@@ -233,7 +239,7 @@ update: $(GAME) recover $(VARDAT) dungeon spec_levs
 install: $(GAME) recover $(VARDAT) dungeon spec_levs
 # set up the directories
 # not all mkdirs have -p; those that don't will create a -p directory
-#	-mkdir -p $(SHELLDIR)
+	-mkdir -p $(SHELLDIR)
 	-rm -rf $(GAMEDIR) $(VARDIR)
 	-mkdir -p $(GAMEDIR) $(VARDIR) $(VARDIR)/save
 	-rmdir ./-p
