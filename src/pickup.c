@@ -1567,6 +1567,14 @@ boolean noit;
 
     if (cobj->olocked) {
 	pline("Hmmm, %s seems to be locked.", noit ? the(xname(cobj)) : "it");
+	if (iflags.autounlock) {
+	    struct obj *pobj = (struct obj *)0;
+	    if ((pobj = carrying(SKELETON_KEY)) ||
+		(pobj = carrying(CREDIT_CARD)) ||
+		(pobj = carrying(LOCK_PICK))) {
+		return pick_lock(pobj, u.ux, u.uy, TRUE);
+	    }
+	}
 	return 0;
     }
     if (cobj->otyp == BAG_OF_TRICKS) {
