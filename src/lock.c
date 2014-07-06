@@ -223,8 +223,10 @@ reset_pick()
 #ifdef OVLB
 
 int
-pick_lock(pick) /* pick a lock with a given object */
+pick_lock(pick,rx,ry,explicit) /* pick a lock with a given object */
 	register struct	obj	*pick;
+	int rx,ry;
+	boolean explicit; /**< Mentioning tool when (un)locking doors? */
 {
 	int picktyp, c, ch;
 	coord cc;
@@ -273,7 +275,13 @@ pick_lock(pick) /* pick a lock with a given object */
 	}
 	ch = 0;		/* lint suppression */
 
-	if(!get_adjacent_loc((char *)0, "Invalid location!", u.ux, u.uy, &cc)) return 0;
+	if (rx != 0 && ry != 0) {
+	    cc.x = rx;
+	    cc.y = ry;
+	} else if (!get_adjacent_loc((char *)0, "Invalid location!", u.ux, u.uy, &cc)) {
+	    return 0;
+	}
+
 	if (cc.x == u.ux && cc.y == u.uy) {	/* pick lock on a container */
 	    const char *verb;
 	    boolean it;
@@ -400,9 +408,10 @@ pick_lock(pick) /* pick a lock with a given object */
 			return(0);
 		    }
 #endif
-
-		    Sprintf(qbuf,"%sock it?",
-			(door->doormask & D_LOCKED) ? "Unl" : "L" );
+		    Sprintf(qbuf,"%sock it%s%s?",
+			(door->doormask & D_LOCKED) ? "Unl" : "L",
+			explicit ? " with " : "",
+			explicit ? doname(pick) : "");
 
 		    c = yn(qbuf);
 		    if(c == 'n') return(0);
@@ -557,15 +566,25 @@ doopen_indir(x, y)		/* try to open a door in direction u.dx/u.dy */
 
 	if (!(door->doormask & D_CLOSED)) {
 	    const char *mesg;
+	    boolean locked = FALSE;
 
 	    switch (door->doormask) {
 	    case D_BROKEN: mesg = " is broken"; break;
 	    case D_NODOOR: mesg = "way has no door"; break;
 	    case D_ISOPEN: mesg = " is already open"; break;
-	    default:	   mesg = " is locked"; break;
+	    default:	   mesg = " is locked"; locked = TRUE; break;
 	    }
 	    pline("This door%s.", mesg);
 	    if (Blind) feel_location(cc.x,cc.y);
+	    if (locked) {
+		struct obj *otmp = (struct obj *)0;
+		if (iflags.autounlock &&
+		    ((otmp = carrying(SKELETON_KEY)) ||
+		     (otmp = carrying(CREDIT_CARD)) ||
+		     (otmp = carrying(LOCK_PICK)))) {
+			pick_lock(otmp, cc.x, cc.y, TRUE);
+		}
+	    }
 	    return(0);
 	}
 

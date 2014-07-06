@@ -66,6 +66,7 @@ static struct Bool_Opt
 	{"autopickup", &flags.pickup, TRUE, SET_IN_GAME},
 	{"apexception_regex", &iflags.ape_regex, FALSE,  SET_IN_FILE},
 	{"autoquiver", &flags.autoquiver, FALSE, SET_IN_GAME},
+	{"autounlock", &iflags.autounlock, TRUE, SET_IN_GAME},
 #if defined(MICRO) && !defined(AMIGA)
 	{"BIOS", &iflags.BIOS, FALSE, SET_IN_FILE},
 #else

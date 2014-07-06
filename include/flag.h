@@ -257,6 +257,7 @@ struct instance_flags {
 	boolean  pickup_dropped;	/* don't auto-pickup items you dropped */
     boolean msgtype_regex;
     boolean ape_regex;
+    boolean autounlock;		/* Automatically apply unlocking tool */
     boolean show_shop_prices;
     boolean item_use_menu;
     boolean notice_walls;
