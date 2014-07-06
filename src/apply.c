@@ -2843,7 +2843,7 @@ doapply()
 	case CREDIT_CARD:
 #endif
 	case SKELETON_KEY:
-		(void) pick_lock(obj, 0, 0, FALSE);
+		(void) pick_lock(obj, 0, 0, FALSE, FALSE);
 		break;
 	case PICK_AXE:
 	case DWARVISH_MATTOCK:

@@ -1572,7 +1572,7 @@ boolean noit;
 	    if ((pobj = carrying(SKELETON_KEY)) ||
 		(pobj = carrying(CREDIT_CARD)) ||
 		(pobj = carrying(LOCK_PICK))) {
-		return pick_lock(pobj, u.ux, u.uy, TRUE);
+		return pick_lock(pobj, u.ux, u.uy, TRUE, TRUE);
 	    }
 	}
 	return 0;

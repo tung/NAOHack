@@ -11,6 +11,7 @@ STATIC_PTR int NDECL(forcelock);
 STATIC_VAR NEARDATA struct xlock_s {
 	struct rm  *door;
 	struct obj *box;
+	boolean loot_unlocked;
 	int picktyp, chance, usedtime;
 } xlock;
 
@@ -119,8 +120,10 @@ picklock()	/* try to open/close a lock */
 	    else xlock.door->doormask = D_LOCKED;
 	} else {
 	    xlock.box->olocked = !xlock.box->olocked;
-	    if(xlock.box->otrapped)	
+	    if(xlock.box->otrapped)
 		(void) chest_trap(xlock.box, FINGER, FALSE);
+	    else if (!xlock.box->olocked && xlock.loot_unlocked)
+		use_container(xlock.box, 0);
 	}
 	exercise(A_DEX, TRUE);
 	return((xlock.usedtime = 0));
@@ -215,6 +218,7 @@ void
 reset_pick()
 {
 	xlock.usedtime = xlock.chance = xlock.picktyp = 0;
+	xlock.loot_unlocked = FALSE;
 	xlock.door = 0;
 	xlock.box = 0;
 }
@@ -223,10 +227,11 @@ reset_pick()
 #ifdef OVLB
 
 int
-pick_lock(pick,rx,ry,explicit) /* pick a lock with a given object */
+pick_lock(pick,rx,ry,explicit,loot_after) /* pick a lock with a given object */
 	register struct	obj	*pick;
 	int rx,ry;
 	boolean explicit; /**< Mentioning tool when (un)locking doors? */
+	boolean loot_after; /**< #loot after successfully unlocking a box */
 {
 	int picktyp, c, ch;
 	coord cc;
@@ -353,6 +358,7 @@ pick_lock(pick,rx,ry,explicit) /* pick a lock with a given object */
 		    xlock.picktyp = picktyp;
 		    xlock.box = otmp;
 		    xlock.door = 0;
+		    xlock.loot_unlocked = loot_after;
 		    break;
 		}
 	    if (c != 'y') {
@@ -432,6 +438,7 @@ pick_lock(pick,rx,ry,explicit) /* pick a lock with a given object */
 		    }
 		    xlock.door = door;
 		    xlock.box = 0;
+		    xlock.loot_unlocked = FALSE;
 	    }
 	}
 	flags.move = 0;
@@ -582,7 +589,7 @@ doopen_indir(x, y)		/* try to open a door in direction u.dx/u.dy */
 		    ((otmp = carrying(SKELETON_KEY)) ||
 		     (otmp = carrying(CREDIT_CARD)) ||
 		     (otmp = carrying(LOCK_PICK)))) {
-			pick_lock(otmp, cc.x, cc.y, TRUE);
+			pick_lock(otmp, cc.x, cc.y, TRUE, FALSE);
 		}
 	    }
 	    return(0);
