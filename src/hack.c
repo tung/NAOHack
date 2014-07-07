@@ -702,6 +702,8 @@ int mode;
 	} else if (mode == TEST_TRAV) {
 	    struct obj* obj;
 
+	    if (In_sokoban(&u.uz)) return FALSE;
+
 	    /* don't pick two boulders in a row, unless there's a way thru */
 	    if (sobj_at(BOULDER,ux,uy) && !In_sokoban(&u.uz)) {
 		if (!Passes_walls &&
