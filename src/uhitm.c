@@ -194,14 +194,23 @@ struct obj *wep;	/* uwep for attack(), null for kick_monster() */
 	    wakeup(mtmp);
 	}
 
-	if (flags.confirm && mtmp->mpeaceful
-	    && !Confusion && !Hallucination && !Stunned) {
+	if (mtmp->mpeaceful && !Confusion && !Hallucination && !Stunned) {
 		/* Intelligent chaotic weapons (Stormbringer) want blood */
 		if (wep && wep->oartifact == ART_STORMBRINGER) {
 			override_confirmation = TRUE;
 			return(FALSE);
 		}
 		if (canspotmon(mtmp)) {
+		    if (iflags.safe_peaceful) {
+			if (mtmp->data->msound == MS_PRIEST) {
+			    /* Prevent accidental donation prompt. */
+			    pline("The priest mutters a prayer.");
+			} else {
+			    if (!dotalk_indir(u.dx, u.dy, 0))
+				flags.move = 0;
+			}
+			return TRUE;
+		    } else if (flags.confirm) {
 #ifdef PARANOID
 			Sprintf(qbuf, "Really attack %s? [no/yes]",
 				mon_nam(mtmp));
@@ -222,6 +231,7 @@ struct obj *wep;	/* uwep for attack(), null for kick_monster() */
 #ifdef PARANOID
 			}
 #endif
+		    }
 		}
 	}
 

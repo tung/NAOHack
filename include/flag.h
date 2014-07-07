@@ -265,6 +265,7 @@ struct instance_flags {
     boolean hilite_hidden_stairs;
     boolean hilite_obj_piles;
     boolean mapcolors;	/* recolor walls and floors of special dungeon regions */
+    boolean safe_peaceful;
 /*
  * Window capability support.
  */
