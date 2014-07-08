@@ -2199,6 +2199,9 @@ prevent the game from attempting unintended moves if you make inadvertent
 mouse clicks on the map window.
 .lp verbose
 Provide more commentary during the game (default on).
+.lp wear_unified
+`W'ear and `T`ake off work on rings, amulets and blindfolds the same way they
+work on armor (default on).
 .lp windowtype
 Select which windowing system to use, such as ``tty'' or ``X11''
 (default depends on version).

@@ -56,9 +56,11 @@ STATIC_DCL void FDECL(Ring_off_or_gone, (struct obj *, BOOLEAN_P));
 STATIC_PTR int FDECL(select_off, (struct obj *));
 STATIC_DCL struct obj *NDECL(do_takeoff);
 STATIC_PTR int NDECL(take_off);
+STATIC_DCL int FDECL(remring, (struct obj *));
 STATIC_DCL int FDECL(menu_remarm, (int));
 STATIC_DCL void FDECL(already_wearing, (const char*));
 STATIC_DCL void FDECL(already_wearing2, (const char*, const char*));
+STATIC_DCL int FDECL(puton, (struct obj *));
 
 void
 off_msg(otmp)
@@ -1049,6 +1051,8 @@ cancel_don()
 
 static NEARDATA const char clothes[] = {ARMOR_CLASS, 0};
 static NEARDATA const char accessories[] = {RING_CLASS, AMULET_CLASS, TOOL_CLASS, FOOD_CLASS, 0};
+static NEARDATA const char clothes_accessories[] =
+	{ARMOR_CLASS, RING_CLASS, AMULET_CLASS, TOOL_CLASS, FOOD_CLASS, 0};
 
 /* the 'T' command */
 int
@@ -1074,6 +1078,12 @@ dotakeoff()
 		otmp = uarmu;
 #endif
 	}
+	if (iflags.wear_unified) {
+	    MOREARM(uleft);
+	    MOREARM(uright);
+	    MOREARM(uamul);
+	    MOREARM(ublindf);
+	}
 	if (!armorpieces) {
 	     /* assert( GRAY_DRAGON_SCALES > YELLOW_DRAGON_SCALE_MAIL ); */
 		if (uskin)
@@ -1082,6 +1092,7 @@ dotakeoff()
 				"dragon scales are" : "dragon scale mail is");
 		else
 		    pline("Not wearing any armor.%s", (iflags.cmdassist && 
+				!iflags.wear_unified &&
 				(uleft || uright || uamul || ublindf)) ?
 			  "  Use 'R' command to remove accessories." : "");
 		return 0;
@@ -1091,8 +1102,12 @@ dotakeoff()
 	    || iflags.paranoid_remove
 #endif
 	    )
-		otmp = getobj(clothes, "take off");
+		otmp = getobj(iflags.wear_unified ? clothes_accessories :
+						    clothes,
+			      "take off");
 	if (otmp == 0) return(0);
+	if (otmp->owornmask & (W_RING | W_AMUL | W_TOOL))
+		return remring(otmp);
 	if (!(otmp->owornmask & W_ARMOR)) {
 		You("are not wearing that.");
 		return(0);
@@ -1121,9 +1136,15 @@ dotakeoff()
 int
 doremring()
 {
-	register struct obj *otmp = 0;
+	return remring((struct obj *)0);
+}
+
+STATIC_OVL int
+remring(struct obj *otmp)
+{
 	int Accessories = 0;
 
+	if (!otmp) {
 #define MOREACC(x) if (x) { Accessories++; otmp = x; }
 	MOREACC(uleft);
 	MOREACC(uright);
@@ -1145,6 +1166,7 @@ doremring()
 	    || iflags.paranoid_remove
 #endif
 	    ) otmp = getobj(accessories, "remove");
+	}
 	if(!otmp) return(0);
 	if(!(otmp->owornmask & (W_RING | W_AMUL | W_TOOL))) {
 		You("are not wearing that.");
@@ -1416,19 +1438,33 @@ boolean noisy;
 int
 dowear()
 {
-	struct obj *otmp;
+	struct obj *otmp = 0;
 	int delay;
 	long mask = 0;
 
+	if (iflags.wear_unified) {
+		/* must go here so accessories bypass verysmall/nohands checks */
+		otmp = getobj(clothes_accessories, "wear");
+		if (!otmp) return(0);
+		if (otmp->oclass == RING_CLASS || otmp->otyp == MEAT_RING ||
+				otmp->oclass == AMULET_CLASS ||
+				otmp->oclass == TOOL_CLASS)
+			return puton(otmp);
+	}
+
 	/* cantweararm checks for suits of armor */
 	/* verysmall or nohands checks for shields, gloves, etc... */
-	if ((verysmall(youmonst.data) || nohands(youmonst.data))) {
+	if ((!otmp || otmp->oclass == ARMOR_CLASS) &&
+			(verysmall(youmonst.data) || nohands(youmonst.data))) {
 		pline("Don't even bother.");
 		return(0);
 	}
 
-	otmp = getobj(clothes, "wear");
-	if(!otmp) return(0);
+	if (!iflags.wear_unified) {
+		/* armor-only 'W'ear prompt goes after verysmall/nohands checks */
+		otmp = getobj(clothes, "wear");
+		if (!otmp) return(0);
+	}
 
 	if (!canwearobj(otmp,&mask,TRUE)) return(0);
 
@@ -1478,7 +1514,12 @@ dowear()
 int
 doputon()
 {
-	register struct obj *otmp;
+	return puton((struct obj *)0);
+}
+
+STATIC_OVL int
+puton(struct obj *otmp)
+{
 	long mask = 0L;
 
 	if(uleft && uright && uamul && ublindf) {
@@ -1488,7 +1529,7 @@ doputon()
 			ublindf->otyp==LENSES ? "some lenses" : "a blindfold");
 		return(0);
 	}
-	otmp = getobj(accessories, "put on");
+	if(!otmp) otmp = getobj(accessories, "put on");
 	if(!otmp) return(0);
 	if(otmp->owornmask & (W_RING | W_AMUL | W_TOOL)) {
 		already_wearing(c_that_);

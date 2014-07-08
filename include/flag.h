@@ -266,6 +266,7 @@ struct instance_flags {
     boolean hilite_obj_piles;
     boolean mapcolors;	/* recolor walls and floors of special dungeon regions */
     boolean safe_peaceful;
+    boolean wear_unified;	/* wear/takeoff work on rings/amulets/blindfolds too */
 /*
  * Window capability support.
  */

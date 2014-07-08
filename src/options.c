@@ -279,6 +279,7 @@ static struct Bool_Opt
 #else
 	{"vt_tiledata", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
+	{"wear_unified", &iflags.wear_unified, TRUE, SET_IN_GAME},
 	{"wraptext", &iflags.wc2_wraptext, FALSE, SET_IN_GAME},
 	{(char *)0, (boolean *)0, FALSE, 0}
 };

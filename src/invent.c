@@ -968,6 +968,7 @@ register const char *let,*word;
 			foo--;
 		/* ugly check for unworn armor that can't be worn */
 		else if (putting_on(word) && *let == ARMOR_CLASS &&
+			 otmp->oclass == ARMOR_CLASS &&
 			 !canwearobj(otmp, &dummymask, FALSE)) {
 			foo--;
 			allowall = TRUE;
