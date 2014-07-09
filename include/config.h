@@ -49,6 +49,12 @@
 /* #define GNOME_GRAPHICS */	/* Gnome interface */
 /* #define MSWIN_GRAPHICS */	/* Windows NT, CE, Graphics */
 
+/* Allow text windows to be scrolled freely with '<' (previous page),
+ * '>' (next page), '^' (first page) and '|' (last page), including
+ * custom-mapped menu controls.
+ */
+#define TTY_TEXT_WINDOW_SCROLLING
+
 #define TTY_TILES_PATCH
 
 #ifdef TTY_TILES_PATCH

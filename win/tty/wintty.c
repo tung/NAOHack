@@ -1609,16 +1609,92 @@ struct WinDesc *cw;
 {
     int i, n, attr;
     register char *cp;
+    char resp[QBUFSZ];
+    boolean end_of_page, end_of_text;
+    int page_height = ttyDisplay->rows - cw->offy - 1;
 
-    for (n = 0, i = 0; i < cw->maxrow; i++) {
-	if (!cw->offx && (n + cw->offy == ttyDisplay->rows - 1)) {
-	    tty_curs(window, 1, n);
+    resp[0] = '\0';
+    Strcat(resp, quitchars);
+#ifdef TTY_TEXT_WINDOW_SCROLLING
+    /* Support menu page-scrolling controls for multi-page text windows. */
+    if (cw->maxrow > page_height) {
+	const char *c;
+	char *c2;
+	char mc;
+	/* Append menu scrolling commands to resp. */
+	for (c2 = resp; *c2; c2++)
+	    /* empty */;
+	/* Only accept menu scrolling commands in default_menu_cmds. */
+	for (c = default_menu_cmds; *c; c++) {
+	    mc = map_menu_cmd(*c);
+	    if (mc == MENU_NEXT_PAGE || mc == MENU_PREVIOUS_PAGE ||
+		mc == MENU_FIRST_PAGE || mc == MENU_LAST_PAGE) {
+		*c2 = *c;
+		c2++;
+	    }
+	}
+	/* Ditto for mapped_menu_cmds. */
+	for (c = mapped_menu_cmds; *c; c++) {
+	    mc = map_menu_cmd(*c);
+	    if (mc == MENU_NEXT_PAGE || mc == MENU_PREVIOUS_PAGE ||
+		mc == MENU_FIRST_PAGE || mc == MENU_LAST_PAGE) {
+		*c2 = *c;
+		c2++;
+	    }
+	}
+    }
+#endif
+
+    for (n = 0, i = 0; i <= cw->maxrow; i++) {
+	end_of_page = (!cw->offx && n == page_height);
+	end_of_text = (i == cw->maxrow);
+	if (end_of_page || end_of_text) {
+	    if (end_of_text) {
+		tty_curs(BASE_WINDOW, (int)cw->offx + 1,
+			 (cw->type == NHW_TEXT) ? (int)ttyDisplay->rows - 1 : n);
+	    } else { /* end_of_page */
+		tty_curs(window, 1, n);
+	    }
+
 	    cl_end();
-	    dmore(cw, quitchars);
+	    dmore(cw, resp);
+#ifdef TTY_TEXT_WINDOW_SCROLLING
+	    /* treat space as distinct from '>' (next page) */
+	    if (!index(quitchars, morc))
+		morc = map_menu_cmd(morc);
+#endif
+
 	    if (morc == DOESCAPE) {
 		cw->flags |= WIN_CANCELLED;
 		break;
+#ifdef TTY_TEXT_WINDOW_SCROLLING
+	    } else if (morc == MENU_FIRST_PAGE) {
+		i = 0;
+	    } else if (morc == MENU_LAST_PAGE) {
+		i = (cw->maxrow / page_height) * page_height;
+		if (i == cw->maxrow) i -= page_height;
+	    } else if (morc == MENU_PREVIOUS_PAGE) {
+		/* rewind current page, then the one before it */
+		i -= n + page_height;
+		if (i < 0) i = 0;
+#endif
+	    /* Other keys are treated as advancing the page. */
+	    } else if (end_of_text) {
+#ifdef TTY_TEXT_WINDOW_SCROLLING
+		if (morc == MENU_NEXT_PAGE) {
+		    /* Pressing '>' (next page) at the end of the text
+		     * won't run off the end of it.
+		     */
+		    i -= n;
+		} else {
+#endif
+		    /* exit this text window */
+		    break;
+#ifdef TTY_TEXT_WINDOW_SCROLLING
+		}
+#endif
 	    }
+
 	    if (cw->offy) {
 		tty_curs(window, 1, 0);
 		cl_eos();
@@ -1645,14 +1721,6 @@ struct WinDesc *cw;
 	    (void) pututf8char(*cp);
 	    term_end_attr(attr);
 	}
-    }
-    if (i == cw->maxrow) {
-	tty_curs(BASE_WINDOW, (int)cw->offx + 1,
-		 (cw->type == NHW_TEXT) ? (int) ttyDisplay->rows - 1 : n);
-	cl_end();
-	dmore(cw, quitchars);
-	if (morc == DOESCAPE)
-	    cw->flags |= WIN_CANCELLED;
     }
 }
 
@@ -2044,8 +2112,9 @@ tty_putstr(window, attr, str)
     case NHW_MENU:
     case NHW_TEXT:
 	if(cw->type == NHW_TEXT && cw->cury == ttyDisplay->rows-1) {
-	    /* not a menu, so save memory and output 1 page at a time */
 	    cw->maxcol = ttyDisplay->cols; /* force full-screen mode */
+#ifndef TTY_TEXT_WINDOW_SCROLLING
+	    /* not a menu, so save memory and output 1 page at a time */
 	    tty_display_nhwindow(window, TRUE);
 	    for(i=0; i<cw->maxrow; i++)
 		if(cw->data[i]){
@@ -2053,6 +2122,7 @@ tty_putstr(window, attr, str)
 		    cw->data[i] = 0;
 		}
 	    cw->maxrow = cw->cury = 0;
+#endif
 	}
 	/* always grows one at a time, but alloc 12 at a time */
 	if(cw->cury >= cw->rows) {
