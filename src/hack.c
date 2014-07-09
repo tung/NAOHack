@@ -783,7 +783,45 @@ boolean guess;
 		    int nx = x+xdir[ordered[dir]];
 		    int ny = y+ydir[ordered[dir]];
 
-		    if (!isok(nx, ny)) continue;
+		    /*
+		     * When guessing and trying to travel as close as possible
+		     * to an unreachable target space, don't include spaces that
+		     * would never be picked as a guessed target in the travel
+		     * matrix describing player-reachable spaces.  This stops
+		     * travel from getting confused and moving the player back
+		     * and forth in certain degenerate configurations of
+		     * sight-blocking obstacles, e.g.
+		     *
+		     *    T         1. Dig this out and carry enough to not be
+		     *      ####       able to squeeze through diagonal gaps.
+		     *      #--.---    Stand at @ and target travel at space T.
+		     *       @.....
+		     *       |.....
+		     *
+		     *    T         2. couldsee() marks spaces marked a and x as
+		     *      ####       eligible guess spaces to move the player
+		     *      a--.---    towards.  Space a is closest to T, so it
+		     *       @xxxxx    gets chosen.  Travel system moves @ right
+		     *       |xxxxx    to travel to space a.
+		     *
+		     *    T         3. couldsee() marks spaces marked b, c and x
+		     *      ####       as eligible guess spaces to move the
+		     *      a--c---    player towards.  Since findtravelpath()
+		     *       b@xxxx    is called repeatedly during travel, it
+		     *       |xxxxx    doesn't remember that it wanted to go to
+		     *                 space a, so in comparing spaces b and c,
+		     *                 b is chosen, since it seems like the
+		     *                 closest eligible space to T.  Travel
+		     *                 system moves @ left to go to space b.
+		     *
+		     *              4. Go to 2.
+		     *
+		     * By limiting the travel matrix here, space a in the
+		     * example above is never included in it, preventing the
+		     * cycle.
+		     */
+		    if (!isok(nx, ny) || (guess && couldsee(nx, ny)))
+			continue;
 		    if ((!Passes_walls && !can_ooze(&youmonst) &&
 			closed_door(x, y)) || sobj_at(BOULDER, x, y)) {
 			/* closed doors and boulders usually
