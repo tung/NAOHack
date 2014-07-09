@@ -138,6 +138,7 @@ static struct Bool_Opt
 #else
 	{"ignintr", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
+	{"interrupt_hp_pw", &iflags.interrupt_hp_pw, TRUE, SET_IN_GAME},
 	{"item_use_menu", &iflags.item_use_menu, TRUE, SET_IN_GAME},
 	{"large_font", &iflags.obsolete, FALSE, SET_IN_FILE},	/* OBSOLETE */
 	{"legacy", &flags.legacy, TRUE, DISP_IN_GAME},

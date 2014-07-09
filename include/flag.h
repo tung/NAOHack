@@ -267,6 +267,7 @@ struct instance_flags {
     boolean mapcolors;	/* recolor walls and floors of special dungeon regions */
     boolean safe_peaceful;
     boolean wear_unified;	/* wear/takeoff work on rings/amulets/blindfolds too */
+    boolean interrupt_hp_pw;	/* interrupt multi-turn actions when HP/Pw are restored */
 /*
  * Window capability support.
  */

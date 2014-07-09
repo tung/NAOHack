@@ -1882,6 +1882,9 @@ characters for such terminals, so you should specify it when appropriate
 even if you override the selections with your own graphics strings.
 .lp ignintr
 Ignore interrupt signals, including breaks (default off).
+.lp interrupt_hp_pw
+Interrupt multi-turn actions when hit points or magical power is restored
+(default on).
 .lp legacy
 Display an introductory message when starting the game (default on).
 .lp lit_corridor
